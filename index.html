@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PaysQuizz - Thème Mondial</title>
+    <style>
+        /* --- NOUVEAU THÈME VERT --- */
+        :root {
+            --primary: #047857; /* Vert Foncé Émeraude */
+            --secondary: #10b981; /* Vert Émeraude */
+            --accent: #fcd34d; /* Jaune Or */
+            --bg: #1f2937; /* Gris Ardoise (Terre) */
+            --card-bg: rgba(55, 65, 81, 0.85); /* Gris-Bleu Ardoise */
+            --text: #f3f4f6;
+            --success: #34d399;
+            --danger: #f87171;
+            --warning: #fbbf24;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+
+        body {
+            background: radial-gradient(circle at top left, #34d399, var(--bg));
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* Background Effects */
+        .orb { position: fixed; border-radius: 50%; filter: blur(100px); z-index: -1; opacity: 0.5; }
+        .orb-1 { top: -15%; left: -15%; width: 50vw; height: 50vw; background: var(--secondary); }
+        .orb-2 { bottom: -15%; right: -15%; width: 40vw; height: 40vw; background: var(--accent); }
+
+        .container { width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 20px; }
+
+        h1 {
+            text-align: center; font-weight: 800; font-size: 2.5rem;
+            background: linear-gradient(to right, var(--secondary), #d1fae5);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px;
+        }
+        h2 { text-align: center; font-size: 1rem; color: #a1a1aa; font-weight: 400; margin-bottom: 20px; }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 24px;
+            padding: 25px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .clue-display { text-align: center; margin-bottom: 25px; }
+        .clue-badge {
+            display: inline-block;
+            font-size: 4rem; color: white; padding: 10px 20px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            border-radius: 18px;
+            border: 4px solid rgba(255,255,255,0.15);
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.4); /* Nouvelle couleur d'orbite */
+            margin-bottom: 10px;
+        }
+        .clue-label { display: block; color: #d4d4d8; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 1px; }
+
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem; color: #e4e4e7; font-weight: 600; }
+        .points-badge { font-size: 0.75rem; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; color: #a7f3d0; }
+        
+        input {
+            width: 100%; background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 14px; border-radius: 12px;
+            color: white; font-size: 1rem; transition: all 0.2s;
+        }
+        input:focus { outline: none; border-color: var(--secondary); box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); }
+        input:disabled { opacity: 0.7; cursor: not-allowed; }
+
+        .correction {
+            margin-top: 8px; padding: 10px; border-radius: 8px; font-size: 0.9rem;
+            background: rgba(0,0,0,0.2); display: none; line-height: 1.4;
+        }
+
+        /* Jauge de Densité */
+        .density-gauge {
+            display: flex; align-items: center; margin-top: 5px;
+            font-size: 0.8rem; color: #a1a1aa;
+        }
+        .density-bar {
+            height: 10px; border-radius: 5px; width: 100px;
+            margin-left: 10px;
+            transition: all 0.5s ease-out;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .btn {
+            width: 100%; padding: 16px; border-radius: 14px; border: none;
+            font-size: 1.1rem; font-weight: 700; cursor: pointer;
+            transition: all 0.2s; margin-top: 10px;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .btn-primary { background: linear-gradient(to right, var(--primary), var(--secondary)); color: white; box-shadow: 0 10px 25px -5px rgba(4, 126, 88, 0.5); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 15px 30px -5px rgba(4, 126, 88, 0.6); }
+        .btn-new { background: rgba(255,255,255,0.1); color: white; display: none; border: 1px solid rgba(255,255,255,0.2); }
+        .btn-new:hover { background: rgba(255,255,255,0.2); }
+
+        /* Score Display */
+        .result-container {
+            margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);
+            display: none; text-align: center;
+        }
+        .final-score { font-size: 3.5rem; font-weight: 900; line-height: 1; margin-bottom: 5px; }
+        .score-bar-bg { width: 100%; height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; margin: 15px 0; overflow: hidden; }
+        .score-bar-fill { height: 100%; width: 0%; background: var(--success); transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .sources { font-size: 0.75rem; color: #a1a1aa; margin-top: 15px; }
+
+        /* History */
+        .history { margin-top: 10px; }
+        .history h3 { font-size: 1rem; color: #a1a1aa; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; }
+        .history-list { display: flex; flex-direction: column; gap: 8px; }
+        .history-item {
+            background: rgba(55, 65, 81, 0.6); padding: 12px; border-radius: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 0.9rem; border-left: 4px solid #6b7280;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <div class="container">
+        <h1>PaysQuizz</h1>
+        <h2>by Maresthil</h2>
+        
+        <div class="card">
+            <div class="clue-display">
+                <div class="clue-badge" id="countryCode">---</div> 
+                <span class="clue-label" id="countryName">Pays Mystère (Code ISO-A3)</span>
+            </div>
+
+            <div id="gameForm">
+                <div class="input-group">
+                    <label>Capitale <span class="points-badge">40 pts</span></label>
+                    <input type="text" id="inputCapitale" placeholder="ex: Paris" autocomplete="off">
+                    <div class="correction" id="corrCapitale"></div>
+                </div>
+
+                <div class="input-group">
+                    <label>Population <span class="points-badge">40 pts</span></label>
+                    <input type="number" id="inputPop" placeholder="Estimation en milliers d'habitants" autocomplete="off">
+                    <div class="correction" id="corrPop"></div>
+                    <div class="sources">Saisie en milliers d'habitants. Ex: 68 045 pour la France.</div>
+                </div>
+
+                <div class="input-group">
+                    <label>Superficie <span class="points-badge">20 pts</span></label>
+                    <input type="number" id="inputSuperficie" placeholder="Estimation en milliers de km²" step="0.1" autocomplete="off">
+                    <div class="correction" id="corrSuperficie"></div>
+                    <div class="sources">Saisie en milliers de km². Ex: 547 pour la France.</div>
+                </div>
+
+                <button class="btn btn-primary" id="btnValidate">Valider</button>
+                
+                <div class="result-container" id="resultArea">
+                    <div id="densityInfo" style="margin-bottom: 15px;"></div>
+                    <div>Score Final</div>
+                    <div class="final-score" id="scoreValue">0</div>
+                    <div class="score-bar-bg"><div class="score-bar-fill" id="scoreBar"></div></div>
+                    <p id="feedbackText" style="color: #cbd5e1; font-style: italic;"></p>
+                    <p class="sources">Sources des données : Worldometer et Banque Mondiale 2025.</p>
+                </div>
+
+                <button class="btn btn-new" id="btnNext">Nouveau Pays</button>
+            </div>
+        </div>
+
+        <div class="history">
+            <h3>Historique de la session</h3>
+            <div class="history-list" id="historyList"></div>
+        </div>
+    </div>
+
+<script>
+    // --- FONCTION DE PARSING CSV (Identique) ---
+    function parseCSV(csvText, delimiter = ';') {
+        const lines = csvText.trim().split('\n');
+        const headers = lines[0].split(delimiter).map(h => h.trim());
+        const data = [];
+
+        for (let i = 1; i < lines.length; i++) {
+            const values = lines[i].split(delimiter);
+            if (values.length !== headers.length) continue;
+
+            const item = {};
+            for (let j = 0; j < headers.length; j++) {
+                let value = values[j].trim();
+                if (headers[j] === 'Population' || headers[j] === 'Superficie_km2') {
+                    value = value.replace(',', '.');
+                    item[headers[j]] = parseFloat(value);
+                } else {
+                    item[headers[j]] = value;
+                }
+            }
+            data.push(item);
+        }
+        return data;
+    }
+
+    // --- DONNÉES CSV INTÉGRÉES (Utilisation du fichier uploadé) ---
+    const rawCSV = `Code_ISO_A3;Pays_Nom_Fr;Capitale;Population;Superficie_km2
+AFG;Afghanistan;Kaboul;43844;653
+ZAF;Afrique du Sud;Pretoria;64747;1213
+ALB;Albanie;Tirana;2772;27
+DZA;Algérie;Alger;47435;2382
+DEU;Allemagne;Berlin;84075;349
+AND;Andorre;Andorre-la-Vieille;83;0,5
+AGO;Angola;Luanda;39040;1247
+SAU;Arabie Saoudite;Riyad;34566;2150
+ARG;Argentine;Buenos Aires;45851;2737
+ARM;Arménie;Erevan;2952;28
+AUS;Australie;Canberra;26974;7682
+AUT;Autriche;Vienne;9114;82
+AZE;Azerbaïdjan;Bakou;10398;83
+BHS;Bahamas;Nassau;403;10
+BHR;Bahreïn;Manama;1643;0,7
+BGD;Bangladesh;Dacca;175687;130
+BRB;Barbade;Bridgetown;283;0,4
+BEL;Belgique;Bruxelles;11759;30
+BLZ;Belize;Belmopan;423;23
+BEN;Bénin;Porto-Novo;14885;111
+BTN;Bhoutan;Thimphou;793;38
+BOL;Bolivie;Sucre;12438;1084
+BIH;Bosnie-Herzégovine;Sarajevo;3271;51
+BWA;Botswana;Gaborone;2712;567
+BRA;Brésil;Brasilia;218635;8358
+BRN;Brunei;Bandar Seri Begawan;456;6
+BGR;Bulgarie;Sofia;6419;111
+BFA;Burkina Faso;Ouagadougou;23249;274
+BDI;Burundi;Gitega;13500;26
+CPV;Cabo Verde;Praia;574;4
+KHM;Cambodge;Phnom Penh;17260;181
+CMR;Cameroun;Yaoundé;29555;472
+CAN;Canada;Ottawa;41165;9215
+CAF;Centrafrique;Bangui;6226;623
+CHL;Chili;Santiago;19873;744
+CHN;Chine;Pékin;1425178;9388
+COL;Colombie;Bogotá;52562;1139
+COM;Comores;Moroni;874;2
+COG;Congo;Brazzaville;6100;341
+COD;Rép. Dém. du Congo;Kinshasa;112832;2267
+CRI;Costa Rica;San José;5259;51
+HRV;Croatie;Zagreb;3987;56
+CUB;Cuba;La Havane;11099;109
+CYP;Chypre;Nicosie;1352;9
+CZE;Tchéquie;Prague;10515;78
+DNK;Danemark;Copenhague;5938;43
+DJI;Djibouti;Djibouti;1152;23
+DOM;Rép. Dominicaine;Saint-Domingue;11520;48
+ECU;Équateur;Quito;18239;276
+EGY;Égypte;Le Caire;114519;995
+SLV;Salvador;San Salvador;6366;21
+GNQ;Guinée équatoriale;Malabo;1776;28
+ERI;Érythrée;Asmara;3816;117
+EST;Estonie;Tallinn;1346;43
+SWZ;Eswatini;Mbabane;1213;17
+ETH;Éthiopie;Addis-Abeba;131557;1063
+FJI;Fidji;Suva;939;18
+FIN;Finlande;Helsinki;5584;304
+FRA;France;Paris;68045;547
+GAB;Gabon;Libreville;2480;258
+GMB;Gambie;Banjul;2814;10
+GEO;Géorgie;Tbilissi;3727;69
+GHA;Ghana;Accra;34778;238
+GRC;Grèce;Athènes;10352;131
+GTM;Guatemala;Guatemala;18580;108
+GIN;Guinée;Conakry;14352;246
+GNB;Guinée-Bissau;Bissau;2199;36
+GUY;Guyana;Georgetown;819;215
+HTI;Haïti;Port-au-Prince;11868;27
+HND;Honduras;Tegucigalpa;10594;111
+HUN;Hongrie;Budapest;9588;92
+ISL;Islande;Reykjavik;376;100
+IND;Inde;New Delhi;1441719;2973
+IDN;Indonésie;Jakarta;282305;1811
+IRN;Iran;Téhéran;89860;1628
+IRQ;Irak;Bagdad;46524;437
+IRL;Irlande;Dublin;5123;69
+ISR;Israël;Jérusalem;9904;22
+ITA;Italie;Rome;58737;294
+JAM;Jamaïque;Kingston;2827;10
+JPN;Japon;Tokyo;122631;364
+JOR;Jordanie;Amman;11414;89
+KAZ;Kazakhstan;Astana;19828;2700
+KEN;Kenya;Nairobi;56417;580
+KIR;Kiribati;Tarawa-Sud;131;0,8
+KOR;Corée du Sud;Séoul;51740;97
+PRK;Corée du Nord;Pyongyang;26167;120
+KWT;Koweït;Koweït;4310;17
+KGZ;Kirghizistan;Bichkek;7092;199
+LAO;Laos;Vientiane;7739;230
+LVA;Lettonie;Riga;1830;62
+LBN;Liban;Beyrouth;5386;10
+LSO;Lesotho;Maseru;2355;30
+LBR;Libéria;Monrovia;5459;111
+LBY;Libye;Tripoli;6902;1759
+LIE;Liechtenstein;Vaduz;39;0,16
+LTU;Lituanie;Vilnius;2757;62
+LUX;Luxembourg;Luxembourg;660;2
+MDG;Madagascar;Antananarivo;31046;581
+MWI;Malawi;Lilongwe;21469;94
+MYS;Malaisie;Kuala Lumpur;34645;328
+MLI;Mali;Bamako;23689;1220
+MLT;Malte;La Valette;552;0,3
+MRT;Mauritanie;Nouakchott;4902;1030
+MEX;Mexique;Mexico;129388;1944
+MDA;Moldavie;Chisinau;2503;33
+MCO;Monaco;Monaco;37;0,002
+MNG;Mongolie;Oulan-Bator;3448;1553
+MNE;Monténégro;Podgorica;621;13
+MAR;Maroc;Rabat;37920;446
+MOZ;Mozambique;Maputo;34000;786
+MMR;Birmanie;Naypyidaw;54580;653
+NAM;Namibie;Windhoek;2947;823
+NPL;Népal;Katmandou;31248;143
+NLD;Pays-Bas;Amsterdam;17900;33
+NZL;Nouvelle-Zélande;Wellington;5253;263
+NIC;Nicaragua;Managua;7074;120
+NER;Niger;Niamey;27202;1267
+NGA;Nigeria;Abuja;229152;910
+NOR;Norvège;Oslo;5557;323
+OMN;Oman;Mascate;4737;309
+PAK;Pakistan;Islamabad;25520;771
+PAN;Panama;Panama;4572;74
+PNG;Papouasie-Nouvelle-Guinée;Port Moresby;10763;453
+PRY;Paraguay;Asuncion;7013;397
+PER;Pérou;Lima;34577;1280
+PHL;Philippines;Manille;116787;298
+POL;Pologne;Varsovie;38141;306
+PRT;Portugal;Lisbonne;10412;92
+QAT;Qatar;Doha;3116;12
+ROU;Roumanie;Bucarest;18909;230
+RUS;Russie;Moscou;143997;16377
+RWA;Rwanda;Kigali;14569;25
+SAU;Arabie Saoudite;Riyad;34566;2150
+SEN;Sénégal;Dakar;18932;193
+SRB;Serbie;Belgrade;668;88
+SGP;Singapour;Singapour;6030;0,7
+SVK;Slovaquie;Bratislava;5796;49
+SVN;Slovénie;Ljubljana;2119;20
+SOM;Somalie;Mogadiscio;18544;627
+ESP;Espagne;Madrid;47472;498
+LKA;Sri Lanka;Sri Jayawardenepura Kotte;21946;62
+SDN;Soudan;Khartoum;49320;1886
+SWE;Suède;Stockholm;10653;410
+CHE;Suisse;Berne;8850;39
+SYR;Syrie;Damas;24350;185
+TWN;Taïwan;Taipei;23950;36
+TJK;Tadjikistan;Douchanbé;10350;141
+TZA;Tanzanie;Dodoma;69700;886
+THA;Thaïlande;Bangkok;71800;510
+TLS;Timor-Leste;Dili;1387;14
+TGO;Togo;Lomé;9263;54
+TUN;Tunisie;Tunis;12574;162
+TUR;Turquie;Ankara;86380;769
+UGA;Ouganda;Kampala;49925;200
+UKR;Ukraine;Kiev;37900;579
+ARE;Émirats Arabes Unis;Abou Dabi;9590;83
+GBR;Royaume-Uni;Londres;68174;242
+USA;États-Unis;Washington;335894;9147
+URY;Uruguay;Montevideo;3426;175
+UZB;Ouzbékistan;Tachkent;36800;425
+VEN;Venezuela;Caracas;29505;882
+VNM;Vietnam;Hanoï;99460;310
+YEM;Yémen;Sanaa;36609;528
+ZMB;Zambie;Lusaka;21120;743
+ZWE;Zimbabwe;Harare;17415;387
+`;
+
+    const countryData = parseCSV(rawCSV);
+
+    let currentCountry = null;
+    let isRoundActive = true;
+
+    // DOM Elements
+    const els = {
+        code: document.getElementById('countryCode'),
+        nameDisplay: document.getElementById('countryName'),
+        btnVal: document.getElementById('btnValidate'),
+        btnNext: document.getElementById('btnNext'),
+        inputs: {
+            capitale: document.getElementById('inputCapitale'),
+            pop: document.getElementById('inputPop'),
+            superficie: document.getElementById('inputSuperficie')
+        },
+        corrections: {
+            capitale: document.getElementById('corrCapitale'),
+            pop: document.getElementById('corrPop'),
+            superficie: document.getElementById('corrSuperficie')
+        },
+        result: document.getElementById('resultArea'),
+        scoreVal: document.getElementById('scoreValue'),
+        scoreBar: document.getElementById('scoreBar'),
+        feedback: document.getElementById('feedbackText'),
+        history: document.getElementById('historyList'),
+        densityInfo: document.getElementById('densityInfo')
+    };
+
+    function initGame() {
+        pickRandomCountry();
+    }
+
+    function pickRandomCountry() {
+        currentCountry = countryData[Math.floor(Math.random() * countryData.length)];
+        
+        // Affichage des indices
+        els.code.innerText = currentCountry.Code_ISO_A3; 
+        els.nameDisplay.innerHTML = `${currentCountry.Pays_Nom_Fr} (${currentCountry.Code_ISO_A3})`;
+        
+        // Reset UI
+        Object.values(els.inputs).forEach(i => { 
+            i.value = ''; 
+            i.disabled = false; 
+            i.parentElement.querySelector('.points-badge').style.color = '#a7f3d0';
+        });
+        Object.values(els.corrections).forEach(c => c.style.display = 'none');
+        
+        els.result.style.display = 'none';
+        els.scoreBar.style.width = '0%';
+        els.btnVal.style.display = 'block';
+        els.btnNext.style.display = 'none';
+        els.densityInfo.style.display = 'none';
+        els.inputs.capitale.focus();
+        isRoundActive = true;
+    }
+
+    // Fonction de nettoyage de texte
+    function normalize(str) {
+        if (!str) return "";
+        return str
+            .normalize("NFD") 
+            .replace(/[\u0300-\u036f]/g, "") 
+            .replace(/-/g, " ")
+            .toLowerCase()
+            .trim();
+    }
+
+    // Formatage des nombres pour l'affichage (avec séparateur de milliers)
+    function formatNum(num) {
+        // Détermine si on garde 1 décimale (petits nombres, comme la superficie en milliers de km²)
+        const fixed = (num !== null && num < 1000 && !Number.isInteger(num)) ? 1 : 0; 
+        return new Intl.NumberFormat('fr-FR', {
+             minimumFractionDigits: fixed,
+             maximumFractionDigits: fixed
+        }).format(num);
+    }
+
+    // Couleur du score pour l'affichage
+    function getValColor(val, max) {
+        if (val === max) return 'var(--success)';
+        if (val >= max/2) return 'var(--warning)';
+        return 'var(--danger)';
+    }
+
+    // Fonction de scoring pour les estimations
+    function calculateEstimationScore(userValue, realValue, maxPoints) {
+        if (realValue === 0 || isNaN(realValue)) return 0;
+        const diff = Math.abs(realValue - userValue);
+        const ratio = diff / realValue;
+        // La fonction Math.max(0, ...) assure que le score ne soit jamais négatif
+        return Math.max(0, Math.round(maxPoints * (1 - ratio)));
+    }
+    
+    // Fonction de conversion Densité -> Couleur (du vert clair au vert très foncé/brun)
+    function getDensityColor(density) {
+        // Densité maximale réaliste (ex: 2000 hab/km² est déjà très dense)
+        const MAX_DENSITY_FOR_VISUAL = 5000; 
+        const normalized = Math.min(density, MAX_DENSITY_FOR_VISUAL) / MAX_DENSITY_FOR_VISUAL;
+        
+        // Exemple de couleur HSL pour aller du vert clair au vert forêt/brun
+        const hue = 140 - (normalized * 20); // Maintien du vert
+        const saturation = 70 + (normalized * 30);
+        const lightness = 60 - (normalized * 45); // Rend la couleur plus foncée
+        
+        return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+    }
+
+
+    function calculateScore() {
+        if(!isRoundActive) return;
+        isRoundActive = false;
+
+        // --- PONDÉRATION DES POINTS ---
+        const PONDERATION = { capitale: 40, pop: 40, superficie: 20 };
+
+        // 1. Valeurs Utilisateur (Nettoyées et Converties)
+        const userCapitale = normalize(els.inputs.capitale.value);
+        const userPop = parseFloat(els.inputs.pop.value) || 0; 
+        const userSuperficie = parseFloat(els.inputs.superficie.value) || 0; 
+
+
+        // 2. Valeurs Réelles (Nettoyées)
+        const realCapitaleNorm = normalize(currentCountry.Capitale);
+        const realPop = currentCountry.Population;
+        const realSuperficie = currentCountry.Superficie_km2;
+
+
+        // 3. CALCUL DES SCORES
+        let scoreCapitale = (userCapitale === realCapitaleNorm) ? PONDERATION.capitale : 0;
+        let scorePop = calculateEstimationScore(userPop, realPop, PONDERATION.pop);
+        let scoreSuperficie = calculateEstimationScore(userSuperficie, realSuperficie, PONDERATION.superficie);
+
+        const totalScore = scoreCapitale + scorePop + scoreSuperficie;
+        
+        // CALCUL DE LA DENSITÉ (Habitants / km²)
+        // Note: Population est en milliers (x1000) et Superficie en milliers de km² (x1000). Le facteur x1000 s'annule.
+        const density = (realPop / realSuperficie);
+
+        displayResults(totalScore, {
+            capitale: scoreCapitale === PONDERATION.capitale,
+            scorePop: scorePop,
+            scoreSuperficie: scoreSuperficie,
+            
+            // Valeurs réelles pour affichage
+            realCapitale: currentCountry.Capitale,
+            realPop: realPop, // en milliers
+            realSuperficie: realSuperficie, // en milliers
+            density: density
+        });
+    }
+
+    function displayResults(totalScore, d) {
+        // Disable inputs
+        Object.values(els.inputs).forEach(i => i.disabled = true);
+        
+        // --- AFFICHAGE CORRECTIONS ---
+        const PONDERATION = { capitale: 40, pop: 40, superficie: 20 };
+
+        // Capitale
+        const cCapitale = els.corrections.capitale; cCapitale.style.display = 'block';
+        cCapitale.innerHTML = d.capitale
+            ? `<span style="color:var(--success)">✅ Correct ! (${d.realCapitale})</span>`
+            : `<span style="color:var(--danger)">❌ Raté... C'était : <strong>${d.realCapitale}</strong></span>`;
+
+        // Population (en milliers)
+        const cPop = els.corrections.pop; cPop.style.display = 'block';
+        cPop.innerHTML = `Réalité : <strong>${formatNum(d.realPop)}</strong> milliers d'habitants <span style="color:${getValColor(d.scorePop, PONDERATION.pop)}">(+${d.scorePop} pts)</span>`;
+
+        // Superficie (en milliers de km²)
+        const cSuperficie = els.corrections.superficie; cSuperficie.style.display = 'block';
+        cSuperficie.innerHTML = `Réalité : <strong>${formatNum(d.realSuperficie)}</strong> milliers de km² <span style="color:${getValColor(d.scoreSuperficie, PONDERATION.superficie)}">(+${d.scoreSuperficie} pts)</span>`;
+
+        // --- DENSITÉ (Nouvelle Fonctionnalité) ---
+        els.densityInfo.style.display = 'block';
+        const densityColor = getDensityColor(d.density);
+        const densityWidth = Math.min(100, (d.density / 2500) * 100); // 2500 est une référence pour échelle
+        
+        els.densityInfo.innerHTML = `
+            <div style="font-size: 1rem; font-weight: 600; margin-bottom: 5px; color: ${densityColor};">
+                Densité de Population : ${formatNum(d.density)} hab/km²
+            </div>
+            <div class="density-gauge">
+                <span style="flex-shrink: 0;">Faible</span>
+                <div class="density-bar" style="background: linear-gradient(to right, #6b7280, ${densityColor});">
+                    <div style="height: 100%; width: ${densityWidth}%; background-color: ${densityColor};"></div>
+                </div>
+                <span style="flex-shrink: 0; margin-left: auto;">Forte</span>
+            </div>
+        `;
+
+
+        // --- SCORE FINAL ---
+        els.btnVal.style.display = 'none';
+        els.result.style.display = 'block';
+        els.btnNext.style.display = 'block';
+
+        // Animation Score
+        let current = 0;
+        const step = Math.ceil(totalScore / 50) || 1;
+        const interval = setInterval(() => {
+            current += step;
+            if (current >= totalScore) {
+                current = totalScore;
+                clearInterval(interval);
+            }
+            els.scoreVal.innerText = current;
+            els.scoreBar.style.width = current + '%';
+            els.scoreBar.style.background = getScoreColor(current);
+        }, 15);
+
+        // Feedback
+        let feedback = "";
+        if (totalScore === 100) feedback = "PERFECTION ! Vous maîtrisez la géographie mondiale ! 🏆";
+        else if (totalScore >= 80) feedback = "Excellent ! Votre estimation est très précise. 👏";
+        else if (totalScore >= 50) feedback = "Bonne performance ! Quelques ajustements et c'est parfait. 👍";
+        else feedback = "Entraînez-vous encore un peu ! Le monde est vaste. 🗺️";
+        els.feedback.innerText = feedback;
+
+        addToHistory(currentCountry.Code_ISO_A3, currentCountry.Pays_Nom_Fr, totalScore);
+    }
+
+    function getScoreColor(score) {
+        if(score >= 80) return 'var(--success)';
+        if(score >= 50) return 'var(--warning)';
+        return 'var(--danger)';
+    }
+
+    function addToHistory(code, name, score) {
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        div.style.borderLeftColor = getScoreColor(score);
+        div.innerHTML = `
+            <span><strong>${code}</strong> - ${name}</span>
+            <span style="color:${getScoreColor(score)}; font-weight:bold;">${score}/100</span>
+        `;
+        els.history.prepend(div);
+    }
+
+    els.btnVal.addEventListener('click', calculateScore);
+    els.btnNext.addEventListener('click', pickRandomCountry);
+
+    document.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && isRoundActive) calculateScore();
+    });
+
+    // --- Lancement du jeu ---
+    initGame();
+</script>
+</body>
+</html>
